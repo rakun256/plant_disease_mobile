@@ -78,24 +78,6 @@ class HomeScreen extends ConsumerWidget {
             chipColor: AppTheme.leaf,
             onTap: () => context.push('/history'),
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  const Icon(Icons.bolt_rounded, color: AppTheme.pine),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'UI optimized for smooth transitions and lightweight rebuilds.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
