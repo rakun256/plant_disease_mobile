@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/debug/debug_api_alert.dart';
+import '../core/theme/app_theme.dart';
 import 'router/app_router.dart';
 
 class PlantDiseaseApp extends ConsumerWidget {
@@ -15,10 +16,7 @@ class PlantDiseaseApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: 'Plant Disease Mobile',
       scaffoldMessengerKey: DebugApiAlert.scaffoldMessengerKey,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2F6E3C)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
       routerConfig: router,
     );
   }

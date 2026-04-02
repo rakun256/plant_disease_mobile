@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../common/widgets/loading_overlay.dart';
+import '../../../core/theme/app_theme.dart';
 import '../state/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -56,64 +57,137 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
       body: LoadingOverlay(
         isLoading: authState.isLoading,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
+          child: Stack(
+            children: [
+              Container(
+                height: 260,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.pine, AppTheme.leaf],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              ListView(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                 children: [
-                  TextFormField(
-                    controller: _usernameController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Username (email)',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Username is required.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: authState.isLoading ? null : _submit,
-                      child: const Text('Login'),
+                  Text(
+                    'Plant Disease',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: authState.isLoading
-                          ? null
-                          : () => context.push('/register'),
-                      child: const Text('Create Account'),
+                  Text(
+                    'Secure sign-in and instant leaf analysis.',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back',
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Login to continue disease prediction workflows.',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _usernameController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                labelText: 'Username (email)',
+                                prefixIcon: Icon(Icons.alternate_email_rounded),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Username is required.';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _passwordController,
+                              decoration: const InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: Icon(Icons.lock_outline_rounded),
+                              ),
+                              obscureText: true,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password is required.';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 18),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: authState.isLoading ? null : _submit,
+                                child: const Text('Login'),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : () => context.push('/register'),
+                                child: const Text('Create Account'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.flash_on_rounded,
+                          color: AppTheme.sunset,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Optimized for quick startup and lightweight UI transitions.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
       ),
