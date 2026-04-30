@@ -1,75 +1,87 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../model/prediction_response.dart';
+import 'prediction_detail_widgets.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key, required this.prediction});
 
   final PredictionResponse prediction;
 
   @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  bool _showRawPrediction = false;
+
+  @override
   Widget build(BuildContext context) {
-    final sortedScores = prediction.scores.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final prediction = widget.prediction;
+    final shouldShowPrediction = prediction.shouldShowPrediction;
+    final showPrediction = shouldShowPrediction || _showRawPrediction;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Prediction Result')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: ListTile(
-              title: const Text('Predicted Class'),
-              subtitle: Text(prediction.predictedClass),
-              trailing: Text(_asPercent(prediction.confidence)),
+          if (!shouldShowPrediction) ...[
+            InputAssessmentCard(
+              assessment: prediction.inputAssessment,
+              shouldShowPrediction: false,
             ),
-          ),
-          Card(
-            child: ListTile(
-              title: const Text('Model Version'),
-              subtitle: Text(prediction.modelVersion),
-            ),
-          ),
-          if (prediction.warning.isNotEmpty)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.warning_amber),
-                title: const Text('Warning'),
-                subtitle: Text(prediction.warning),
-              ),
-            ),
-          const SizedBox(height: 8),
-          const Text(
-            'Scores',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          ...sortedScores.map(
-            (entry) => Card(
-              child: ListTile(
-                title: Text(entry.key),
-                subtitle: LinearProgressIndicator(
-                  value: entry.value.clamp(0, 1),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Retake Photo'),
+                  ),
                 ),
-                trailing: Text(_asPercent(entry.value)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      setState(() {
+                        _showRawPrediction = true;
+                      });
+                    },
+                    child: const Text('Show Raw Prediction'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (showPrediction)
+            PredictionSummarySection(
+              predictedClass: prediction.predictedClass,
+              confidence: prediction.confidence,
+              scores: prediction.scores,
+              modelVersion: prediction.modelVersion,
+              inferenceTimeSeconds: prediction.inferenceTimeSeconds,
+              warning: prediction.warning,
+              isLowConfidence: prediction.isLowConfidence,
+              allowDiseaseDetail: shouldShowPrediction || _showRawPrediction,
+            ),
+          if (!showPrediction)
+            const Card(
+              child: ListTile(
+                title: Text('Raw prediction hidden'),
+                subtitle: Text(
+                  'Review the warning above before opening the raw model output.',
+                ),
               ),
             ),
-          ),
           const SizedBox(height: 8),
-          FilledButton(
-            onPressed: () =>
-                context.push('/disease/${prediction.predictedClass}'),
-            child: const Text('Open Disease Detail'),
-          ),
+          ImageQualityCard(quality: prediction.imageQuality),
+          if (prediction.id != null) ...[
+            const SizedBox(height: 8),
+            FeedbackSection(predictionId: prediction.id!),
+          ],
         ],
       ),
     );
-  }
-
-  String _asPercent(double value) {
-    final clamped = value.clamp(0, 1);
-    final percentage = (clamped * 100).toStringAsFixed(2);
-    return '$percentage%';
   }
 }

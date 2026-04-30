@@ -23,6 +23,9 @@ class PredictionService {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(filePath),
         'save_result': saveResult,
+        // Grad-CAM is supported by the backend but disabled in mobile
+        // production flow due to Render free-tier memory limits.
+        'include_explanation': false,
       });
 
       final response = await _dio.post<Map<String, dynamic>>(
@@ -32,6 +35,41 @@ class PredictionService {
 
       final data = response.data ?? <String, dynamic>{};
       return PredictionResponse.fromJson(data);
+    } on DioException catch (error) {
+      throw ApiErrorParser.parse(error);
+    }
+  }
+
+  Future<PredictionFeedbackResponse> submitPredictionFeedback({
+    required int predictionId,
+    required bool isCorrect,
+    String? correctedClass,
+    String? note,
+  }) async {
+    try {
+      final request = PredictionFeedbackRequest(
+        isCorrect: isCorrect,
+        correctedClass: correctedClass,
+        note: note,
+      );
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/api/v1/predictions/$predictionId/feedback',
+        data: request.toJson(),
+      );
+      return PredictionFeedbackResponse.fromJson(
+        response.data ?? <String, dynamic>{},
+      );
+    } on DioException catch (error) {
+      throw ApiErrorParser.parse(error);
+    }
+  }
+
+  Future<AnalyticsSummary> fetchAnalyticsSummary() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/v1/analytics/summary',
+      );
+      return AnalyticsSummary.fromJson(response.data ?? <String, dynamic>{});
     } on DioException catch (error) {
       throw ApiErrorParser.parse(error);
     }

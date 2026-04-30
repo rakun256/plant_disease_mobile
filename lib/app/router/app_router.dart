@@ -7,7 +7,10 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/state/auth_controller.dart';
+import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/disease/presentation/disease_detail_screen.dart';
+import '../../features/history/model/prediction_history_response.dart';
+import '../../features/history/presentation/history_detail_screen.dart';
 import '../../features/history/presentation/history_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/prediction/model/prediction_response.dart';
@@ -52,7 +55,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           location == '/home' ||
           location == '/predict' ||
           location == '/result' ||
-          location == '/history';
+          location == '/history' ||
+          location == '/history/detail' ||
+          location == '/analytics';
 
       if (location == '/splash') {
         final target = isAuthed ? '/home' : '/login';
@@ -101,6 +106,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/history',
         builder: (context, state) => const HistoryScreen(),
+      ),
+      GoRoute(
+        path: '/history/detail',
+        builder: (context, state) {
+          final item = state.extra;
+          if (item is! PredictionHistoryResponse) {
+            return const HistoryScreen();
+          }
+          return HistoryDetailScreen(item: item);
+        },
+      ),
+      GoRoute(
+        path: '/analytics',
+        builder: (context, state) => const AnalyticsScreen(),
       ),
       GoRoute(
         path: '/disease/:slug',

@@ -24,6 +24,13 @@ class ApiErrorParser {
           validationError: validation,
         );
       }
+      if (detail is String && detail.isNotEmpty) {
+        return ApiException(message: detail, statusCode: statusCode);
+      }
+      final message = responseData['message'];
+      if (message is String && message.isNotEmpty) {
+        return ApiException(message: message, statusCode: statusCode);
+      }
     }
 
     final type = error.type;
@@ -46,6 +53,36 @@ class ApiErrorParser {
     if (statusCode == 401) {
       return ApiException(
         message: 'Unauthorized. Please log in again.',
+        statusCode: statusCode,
+      );
+    }
+    if (statusCode == 403) {
+      return ApiException(
+        message: 'You do not have permission to perform this action.',
+        statusCode: statusCode,
+      );
+    }
+    if (statusCode == 404) {
+      return ApiException(
+        message: 'The requested item was not found.',
+        statusCode: statusCode,
+      );
+    }
+    if (statusCode == 409) {
+      return ApiException(
+        message: 'Feedback has already been submitted for this prediction.',
+        statusCode: statusCode,
+      );
+    }
+    if (statusCode == 422) {
+      return ApiException(
+        message: 'Please check the submitted information.',
+        statusCode: statusCode,
+      );
+    }
+    if (statusCode != null && statusCode >= 500) {
+      return ApiException(
+        message: 'Server error. Please try again later.',
         statusCode: statusCode,
       );
     }

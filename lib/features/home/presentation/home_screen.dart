@@ -78,6 +78,15 @@ class HomeScreen extends ConsumerWidget {
             chipColor: AppTheme.leaf,
             onTap: () => context.push('/history'),
           ),
+          const SizedBox(height: 12),
+          _ActionCard(
+            icon: Icons.insights_rounded,
+            title: 'Analytics',
+            subtitle: 'Review prediction counts, confidence, and quality.',
+            chipLabel: 'Summary',
+            chipColor: AppTheme.sunset,
+            onTap: () => context.push('/analytics'),
+          ),
         ],
       ),
     );

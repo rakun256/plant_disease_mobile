@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../common/widgets/app_error_view.dart';
 import '../state/history_controller.dart';
+import '../../prediction/presentation/prediction_detail_widgets.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -93,6 +94,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             'yyyy-MM-dd HH:mm',
                           ).format(item.createdAt!);
 
+                    final badges = <Widget>[
+                      if (item.isLowConfidence)
+                        const Chip(label: Text('Low confidence')),
+                      if (item.imageQuality?.isQualityAcceptable == false)
+                        const Chip(label: Text('Low quality')),
+                      if (!item.shouldShowPrediction)
+                        const Chip(label: Text('Unreliable')),
+                    ];
+
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -100,13 +110,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       ),
                       child: ListTile(
                         title: Text(item.predictedClass),
-                        subtitle: Text('${item.imageName}\n$dateText'),
-                        isThreeLine: true,
-                        trailing: Text(
-                          '${(item.confidence * 100).toStringAsFixed(1)}%',
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${item.imageName}\n$dateText'),
+                            if (badges.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(spacing: 6, runSpacing: 6, children: badges),
+                            ],
+                          ],
                         ),
+                        isThreeLine: badges.isNotEmpty,
+                        trailing: Text(asPercent(item.confidence)),
                         onTap: () =>
-                            context.push('/disease/${item.predictedClass}'),
+                            context.push('/history/detail', extra: item),
                       ),
                     );
                   },
