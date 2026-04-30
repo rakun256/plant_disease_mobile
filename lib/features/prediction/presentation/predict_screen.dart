@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -20,16 +21,70 @@ class _PredictScreenState extends ConsumerState<PredictScreen> {
   XFile? _picked;
   bool _saveResult = true;
 
-  Future<void> _pick(ImageSource source) async {
-    final file = await _picker.pickImage(source: source, imageQuality: 92);
+  @override
+  void initState() {
+    super.initState();
+    _recoverLostImage();
+  }
 
-    if (!mounted) {
+  Future<void> _recoverLostImage() async {
+    if (!Platform.isAndroid) {
       return;
     }
 
-    setState(() {
-      _picked = file;
-    });
+    try {
+      final response = await _picker.retrieveLostData();
+      final file = response.file;
+      if (!mounted || response.isEmpty || file == null) {
+        return;
+      }
+      setState(() {
+        _picked = file;
+      });
+    } on PlatformException catch (error) {
+      _showPickerError(_messageForPickerError(error, ImageSource.gallery));
+    }
+  }
+
+  Future<void> _pick(ImageSource source) async {
+    try {
+      final isSupported = _picker.supportsImageSource(source);
+      if (!isSupported) {
+        if (!mounted) {
+          return;
+        }
+        _showPickerError(
+          source == ImageSource.camera
+              ? 'Camera is not available on this device. If you are using the iOS Simulator, please test camera capture on a real iPhone.'
+              : 'Photo library is not available on this device.',
+        );
+        return;
+      }
+
+      final file = await _picker.pickImage(source: source, imageQuality: 92);
+
+      if (!mounted || file == null) {
+        return;
+      }
+
+      setState(() {
+        _picked = file;
+      });
+    } on PlatformException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showPickerError(_messageForPickerError(error, source));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showPickerError(
+        source == ImageSource.camera
+            ? 'Camera could not be opened. Please check camera permission and try again.'
+            : 'Image could not be selected. Please try again.',
+      );
+    }
   }
 
   Future<void> _predict() async {
@@ -56,6 +111,28 @@ class _PredictScreenState extends ConsumerState<PredictScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
+  }
+
+  void _showPickerError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _messageForPickerError(PlatformException error, ImageSource source) {
+    final code = error.code.toLowerCase();
+    if (code.contains('denied') || code.contains('permission')) {
+      return source == ImageSource.camera
+          ? 'Camera permission is required to take a leaf photo. Please allow camera access in device settings.'
+          : 'Photo library permission is required to select a leaf image. Please allow photo access in device settings.';
+    }
+    if (code.contains('camera') || code.contains('no_available')) {
+      return 'Camera is not available on this device. If you are using the iOS Simulator, please test camera capture on a real iPhone.';
+    }
+    return error.message ??
+        (source == ImageSource.camera
+            ? 'Camera could not be opened. Please try again.'
+            : 'Image could not be selected. Please try again.');
   }
 
   @override
